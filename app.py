@@ -3,7 +3,7 @@ from PIL import Image, ImageEnhance, ImageOps
 import numpy as np
 import io
 import os
-from werkzeug.utils import secure_filename  # Importar secure_filename desde werkzeug.utils
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
@@ -14,6 +14,7 @@ def save_image_to_bytesio(image):
     img_io.seek(0)
     return img_io
 
+# Route to upload an image
 @app.route('/upload', methods=['POST'])
 def upload_image():
     if 'image' not in request.files:
@@ -23,12 +24,14 @@ def upload_image():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    filename = secure_filename(file.filename)  # Usar secure_filename para obtener un nombre seguro
+    # Ensure the filename is safe
+    filename = secure_filename(file.filename)
     file_path = os.path.join("images", filename)
     file.save(file_path)
 
     return jsonify({'message': 'Image uploaded successfully', 'file_path': file_path}), 200
 
+# Route to convert image to black and white
 @app.route('/process-image/bw', methods=['POST'])
 def convert_to_bw():
     file = request.files.get('image')
@@ -44,6 +47,7 @@ def convert_to_bw():
 
     return send_file(img_io, mimetype='image/jpeg')
 
+# Route to adjust image contrast
 @app.route('/process-image/contrast', methods=['POST'])
 def adjust_contrast_route():
     file = request.files.get('image')
@@ -57,6 +61,7 @@ def adjust_contrast_route():
 
     return send_file(img_io, mimetype='image/jpeg')
 
+# Route to convert image to negative
 @app.route('/process-image/negative', methods=['POST'])
 def convert_to_negative_route():
     file = request.files.get('image')
@@ -69,15 +74,16 @@ def convert_to_negative_route():
 
     return send_file(img_io, mimetype='image/jpeg')
 
-# Additional processing functions can be added here similarly
-
+# Function to adjust contrast of an image
 def adjust_contrast(image, contrast):
     enhancer = ImageEnhance.Contrast(image)
     return enhancer.enhance(contrast)
 
+# Function to convert image to negative
 def negative_image(image):
     return ImageOps.invert(image.convert("RGB"))
 
+# Function to convert image to black and white using custom weights
 def convert_to_bw_with_rgb(image, r_weight, g_weight, b_weight):
     if image.mode != 'RGB':
         image = image.convert('RGB')
